@@ -1,7 +1,6 @@
 import pandas as pd
 import streamlit as st
 from datetime import date
-pip install yfinance
 import yfinance as yf
 from prophet import Prophet
 from prophet.plot import plot_plotly
