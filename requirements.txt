@@ -1,6 +1,7 @@
 streamlit==1.11.0
-pandas==1.4.3
+pandas==1.5.3
 yfinance==0.1.70
-prophet==1.1.1
 plotly==5.10.0
-numpy==1.24.0
+numpy==1.24.3
+prophet==1.1
+holidays==0.14.2  # Change this to a compatible version
