@@ -5,3 +5,5 @@ plotly==5.10.0
 numpy==1.24.3
 prophet==1.1.5
 holidays==0.25  # Change this to a compatible version
+altair==4.2.0
+
