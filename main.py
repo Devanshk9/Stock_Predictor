@@ -11,17 +11,19 @@ TODAY = date.today().strftime("%Y-%m-%d")
 
 st.title("Stock Predictor Using Signals")
 st.text("By Devansh Khetan")
-
 # Load the stock symbols from CSV
 def load_stock_symbols():
     try:
         df = pd.read_csv('indian_stocks.csv')
+        
+        # Check if the necessary columns are in the DataFrame
         if 'symbol' not in df.columns or 'name' not in df.columns:
             raise ValueError("CSV file must contain 'symbol' and 'name' columns.")
+        
         return df
     except FileNotFoundError:
         st.error("The file 'indian_stocks.csv' was not found.")
-        return pd.DataFrame()
+        return pd.DataFrame()  # Return an empty DataFrame
     except pd.errors.EmptyDataError:
         st.error("The file 'indian_stocks.csv' is empty.")
         return pd.DataFrame()
@@ -44,7 +46,7 @@ else:
     n_years = st.slider("Years of prediction:", 1, 4)
     period = n_years * 365
 
-    # Load data
+    @st.cache_data
     def load_data(ticker):
         data = yf.download(ticker, START, TODAY)
         data.reset_index(inplace=True)
@@ -70,12 +72,7 @@ else:
         df_train = data[['Date', 'Close']]
         df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
 
-        # Train model
-        m = Prophet()
-        m.fit(df_train)
-
-        future = m.make_future_dataframe(periods=period)
-        forecast = m.predict(future)
+         
 
         st.subheader('Forecast Data')
         st.write(forecast.tail())
