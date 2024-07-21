@@ -21,5 +21,5 @@ This Streamlit application predicts stock prices using historical data and the P
  **Clone the Repository**
 
    ```bash
-   git clone https://github.com/your-username/stock-predictor.git
+   git clone https://github.com/devanshk9/stock-predictor.git
    cd stock-predictor
