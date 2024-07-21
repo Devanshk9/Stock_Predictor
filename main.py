@@ -6,24 +6,25 @@ from prophet import Prophet
 from prophet.plot import plot_plotly
 from plotly import graph_objs as go
 
-START = "2013-01-01"
+START = "2019-01-01"  # Reduced data size to the last 5 years
 TODAY = date.today().strftime("%Y-%m-%d")
 
 st.title("Stock Predictor Using Signals")
 st.text("By Devansh Khetan")
+
 # Load the stock symbols from CSV
+@st.cache_data
 def load_stock_symbols():
     try:
         df = pd.read_csv('indian_stocks.csv')
         
-        # Check if the necessary columns are in the DataFrame
         if 'symbol' not in df.columns or 'name' not in df.columns:
             raise ValueError("CSV file must contain 'symbol' and 'name' columns.")
         
         return df
     except FileNotFoundError:
         st.error("The file 'indian_stocks.csv' was not found.")
-        return pd.DataFrame()  # Return an empty DataFrame
+        return pd.DataFrame()
     except pd.errors.EmptyDataError:
         st.error("The file 'indian_stocks.csv' is empty.")
         return pd.DataFrame()
@@ -52,7 +53,7 @@ else:
         data.reset_index(inplace=True)
         return data
 
-    data_load_state = st.text("Load Data...")
+    data_load_state = st.text("Loading Data...")
     data = load_data(selected_stock)
     data_load_state.text("Loading data...done!")
 
@@ -72,20 +73,53 @@ else:
         df_train = data[['Date', 'Close']]
         df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
 
-        m = Prophet()
-        m.fit(df_train)
-        future = m.make_future_dataframe(periods=period)
-        forecast = m.predict(future)
+        # Initialize the progress bar and spinner
+        progress_bar = st.progress(0)
+        progress_text = st.empty()
+
+        # Function for model training and forecasting
+        def train_and_forecast():
+            m = Prophet(
+                changepoint_prior_scale=0.1,
+                yearly_seasonality=True,
+                weekly_seasonality=True,
+                daily_seasonality=False
+            )
+            m.fit(df_train)
+            progress_bar.progress(50)
+            progress_text.text("Model training completed. Generating forecast...")
+
+            future = m.make_future_dataframe(periods=period)
+            forecast = m.predict(future)
+
+            progress_bar.progress(100)
+            progress_text.text("Forecasting completed!")
+
+            return m, forecast  # Return m along with forecast
+
+        with st.spinner("Training Prophet model and generating forecast..."):
+            m, forecast = train_and_forecast()
+
+        progress_bar.empty()
+        progress_text.empty()
 
         st.subheader('Forecast Data')
         st.write(forecast.tail())
 
+        # Plotting Forecast
         st.write('Forecast Data')
-        fig1 = plot_plotly(m, forecast)
-        st.plotly_chart(fig1)
+        try:
+            fig1 = plot_plotly(m, forecast)
+            st.plotly_chart(fig1)
+        except Exception as e:
+            st.error(f"Error plotting forecast data: {e}")
 
         st.write('Forecast Components')
-        fig2 = m.plot_components(forecast)
-        st.write(fig2)
+        try:
+            fig2 = m.plot_components(forecast)
+            st.write(fig2)
+        except Exception as e:
+            st.error(f"Error plotting forecast components: {e}")
+
     else:
         st.warning("No data available to display.")
